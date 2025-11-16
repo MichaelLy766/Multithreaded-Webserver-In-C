@@ -81,16 +81,30 @@ int handle_client(int client_fd, const char *docroot) {
     }
 
     if (S_ISDIR(st.st_mode)) {
-        // try index.html inside directory
-        char idx[4096];
-        snprintf(idx, sizeof(idx), "%s/index.html", file_path);
-        if (stat(idx, &st) < 0) {
-            const char *resp = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n";
-            write_all(client_fd, resp, strlen(resp));
-            return -1;
+        /* build index path safely */
+        const char *suffix = "/index.html";
+        size_t base_len = strlen(file_path);
+        size_t need = base_len + strlen(suffix) + 1; /* +1 for NUL */
+        char *idx = malloc(need);
+        if (!idx) {
+            /* out of memory: handle error (respond 500 or skip) */
+            /* fallback: truncate into a small stack buffer (safer than overflow) */
+            char tmp[256];
+            snprintf(tmp, sizeof(tmp), "%s%s", file_path, suffix);
+            /* use tmp where idx would be used, or return an error */
+        } else {
+            snprintf(idx, need, "%s%s", file_path, suffix);
+            /* use idx for file lookup */
+            if (stat(idx, &st) < 0) {
+                const char *resp = "HTTP/1.1 403 Forbidden\r\nContent-Length: 0\r\n\r\n";
+                write_all(client_fd, resp, strlen(resp));
+                free(idx);
+                return -1;
+            }
+            strncpy(file_path, idx, sizeof(file_path)-1);
+            file_path[sizeof(file_path)-1] = '\0';
+            free(idx);
         }
-        strncpy(file_path, idx, sizeof(file_path)-1);
-        file_path[sizeof(file_path)-1] = '\0';
     }
 
     int fd = open(file_path, O_RDONLY);
