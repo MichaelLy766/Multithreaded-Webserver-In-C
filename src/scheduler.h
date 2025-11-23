@@ -18,3 +18,6 @@ struct scheduler {
 
 /* FIFO scheduler factory */
 scheduler_t *scheduler_fifo_create(size_t capacity);
+
+/* SJF scheduler factory (min-heap by est_cost ascending) */
+scheduler_t *scheduler_sjf_create(size_t capacity);

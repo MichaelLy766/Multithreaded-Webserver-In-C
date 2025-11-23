@@ -1,6 +1,7 @@
 #pragma once
 
 #include <stddef.h>
+#include <stdint.h>
 
 /*
  * threadpool_t - opaque handle for the thread pool.
@@ -34,6 +35,32 @@ threadpool_t *threadpool_create(size_t nworkers, size_t queue_capacity, const ch
  *  - After this returns the returned handle is no longer valid.
  */
 void threadpool_destroy(threadpool_t *tp);
+
+/*
+ * Job descriptor used by schedulers and the threadpool.
+ * Replace the previous "raw fd in queue" approach with job_t when you
+ * want to experiment with scheduling policies (SJF/priority).
+ */
+typedef struct {
+    int client_fd;        /* client socket FD */
+    long est_cost;        /* estimated cost (e.g. file size) - application provided */
+    int priority;         /* priority (higher = serve earlier) */
+    uint64_t arrival_ms;  /* monotonic arrival timestamp (ms), optional */
+} job_t;
+
+/*
+ * threadpool_set_scheduler:
+ *  - Atomically replace the scheduler used by the threadpool. The
+ *    provided scheduler instance is adopted by the pool and the old
+ *    scheduler (if any) is destroyed.
+ *
+ * Notes:
+ *  - Forward-declared here to avoid header cycles; pass a scheduler
+ *    instance created by your scheduler factory (e.g. scheduler_fifo_create,
+ *    scheduler_sjf_create).
+ */
+struct scheduler;
+void threadpool_set_scheduler(threadpool_t *tp, struct scheduler *sched);
 
 /* Submit job variants:
  * - submit a raw fd (keeps backward compatibility)

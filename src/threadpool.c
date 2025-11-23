@@ -33,13 +33,13 @@ static uint64_t now_ms(void) {
    - pop job via scheduler_pop, process it, then close fd
    - exit when shutdown is set and no work is left */
 static void *worker_main(void *arg) {
-    struct threadpool *tp = (struct.threadpool*)arg;
+    struct threadpool *tp = (struct threadpool*)arg;
     while (1) {
         pthread_mutex_lock(&tp->lock);
         while (1) {
             /* try pop if available */
             job_t job;
-            if (tp->sched->pop(tp->sched, &job) == 0) {
+            if (tp->sched && tp->sched->pop(tp->sched, &job) == 0) {
                 /* we got work */
                 /* signal producers that space is available */
                 pthread_cond_signal(&tp->not_full);
@@ -61,9 +61,9 @@ static void *worker_main(void *arg) {
 
         /* shutting down - ensure queue empty */
         if (tp->shutdown) {
-            /* drain any remaining jobs if desired; current behavior: exit if none */
+            /* drain any remaining jobs */
             job_t leftover;
-            while (tp->sched->pop(tp->sched, &leftover) == 0) {
+            while (tp->sched && tp->sched->pop(tp->sched, &leftover) == 0) {
                 pthread_mutex_unlock(&tp->lock);
                 handle_client(leftover.client_fd, tp->docroot);
                 close(leftover.client_fd);
@@ -102,6 +102,17 @@ threadpool_t *threadpool_create(size_t nworkers, size_t queue_capacity, const ch
         }
     }
     return tp;
+}
+
+void threadpool_set_scheduler(threadpool_t *tp, struct scheduler *sched) {
+    if (!tp || !sched) return;
+    pthread_mutex_lock(&tp->lock);
+    /* replace scheduler atomically: drain nothing, just swap.
+       Any in-flight workers will continue using previous scheduler until
+       next lock acquisition; to be safe we destroy the old scheduler now. */
+    if (tp->sched && tp->sched->destroy) tp->sched->destroy(tp->sched);
+    tp->sched = sched;
+    pthread_mutex_unlock(&tp->lock);
 }
 
 void threadpool_destroy(threadpool_t *tp) {
