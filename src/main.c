@@ -50,13 +50,35 @@ int main(int argc, char **argv) {
         return 1;
     }
 
-    /* switch to SJF scheduler */
-    scheduler_t *sjf = scheduler_sjf_create(queue_capacity);
-    if (sjf) {
-        threadpool_set_scheduler(tp, sjf);
-        printf("Using SJF scheduler\n");
+    /* determine scheduler choice: CLI (--scheduler=...) overrides env SCHEDULER.
+       Supported values: "fifo" or "sjf". Default: "sjf" (to preserve current behavior). */
+    const char *sched_choice = getenv("SCHEDULER");
+    for (int i = 1; i < argc; ++i) {
+        const char *p = "--scheduler=";
+        size_t lp = strlen(p);
+        if (strncmp(argv[i], p, lp) == 0) {
+            sched_choice = argv[i] + lp;
+            break;
+        }
+    }
+    if (!sched_choice) sched_choice = "sjf";
+
+    if (strcmp(sched_choice, "sjf") == 0) {
+        scheduler_t *sjf = scheduler_sjf_create(queue_capacity);
+        if (sjf) {
+            threadpool_set_scheduler(tp, sjf);
+            printf("Using SJF scheduler\n");
+        } else {
+            printf("Using FIFO scheduler (sjf create failed)\n");
+        }
+    } else if (strcmp(sched_choice, "fifo") == 0) {
+        /* threadpool_create() already set FIFO; explicit message for clarity */
+        printf("Using FIFO scheduler\n");
     } else {
-        printf("Using FIFO scheduler (sjf create failed)\n");
+        /* unknown value: warn and fall back to default (sjf) */
+        fprintf(stderr, "warning: unknown scheduler '%s', falling back to sjf\n", sched_choice);
+        scheduler_t *sjf = scheduler_sjf_create(queue_capacity);
+        if (sjf) threadpool_set_scheduler(tp, sjf);
     }
 
     while (!stop) {
