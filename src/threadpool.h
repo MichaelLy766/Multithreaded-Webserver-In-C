@@ -35,16 +35,12 @@ threadpool_t *threadpool_create(size_t nworkers, size_t queue_capacity, const ch
  */
 void threadpool_destroy(threadpool_t *tp);
 
-/*
- * threadpool_submit:
- *  - Submit a connected client socket FD to the pool for processing.
- *  - On success (returns 0) the pool takes ownership of `client_fd` and
- *    will close it after the worker finishes handling the request.
- *  - On failure (returns -1) the submission did not succeed (pool is
- *    shutting down) and the caller remains responsible for closing `client_fd`.
+/* Submit job variants:
+ * - submit a raw fd (keeps backward compatibility)
+ * - submit a full job (preferred for scheduling experiments)
  *
- * Behavior:
- *  - If the queue is full, this call blocks until space is available or
- *    the pool begins shutdown.
+ * Both block when the queue is full and return 0 on success, -1 if the pool
+ * is shutting down or on allocation error.
  */
 int threadpool_submit(threadpool_t *tp, int client_fd);
+int threadpool_submit_job(threadpool_t *tp, job_t job);
