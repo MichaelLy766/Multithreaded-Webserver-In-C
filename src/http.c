@@ -1,4 +1,5 @@
 #include "http.h"
+#include "metrics.h"
 
 // standard headers: errno for errors, fcntl/open, stdio/stdlib/string for helpers
 #include <errno.h>
@@ -13,8 +14,16 @@
 #include <sys/types.h>
 #include <sys/time.h> /* for struct timeval, SO_RCVTIMEO */
 #include <unistd.h>       // read/write/close
+#include <time.h>
+#include <stdint.h>
 
 #define REQ_BUF 8192 /* buffer size for reading the request */
+
+static uint64_t now_ms_local(void) {
+    struct timespec ts;
+    clock_gettime(CLOCK_MONOTONIC, &ts);
+    return (uint64_t)ts.tv_sec * 1000 + ts.tv_nsec / 1000000;
+}
 
 /* write_all: repeatedly call write() until the whole buffer is sent.
    Handles short writes and EINTR. Returns total bytes written or -1 on error. */
@@ -61,6 +70,9 @@ int handle_client(int client_fd, const char *docroot) {
     int served = 0;
 
     while (served < MAX_KEEPALIVE_REQUESTS) {
+        uint64_t req_start = 0;
+        req_start = now_ms_local(); /* helper below */
+
         ssize_t n = read(client_fd, buf, sizeof(buf) - 1);
         if (n == 0) {
             printf("conn %d: client closed connection\n", client_fd);
@@ -218,6 +230,15 @@ int handle_client(int client_fd, const char *docroot) {
 
         close(fd);
 
+        /* after sending response successfully or on error, record metrics */
+        {
+            uint64_t latency = 0;
+            uint64_t bytes_sent = 0;
+            int status_code = 200; /* set appropriately in your code paths */
+            /* if serving a regular file you can set bytes_sent = st.st_size */
+            latency = now_ms_local() - req_start;
+            metrics_record_request(latency, bytes_sent, status_code);
+        }
         /* finished one request */
         served++;
 

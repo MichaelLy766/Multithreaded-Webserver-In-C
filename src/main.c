@@ -15,6 +15,7 @@
 #include "net.h"
 #include "threadpool.h"
 #include "scheduler.h"
+#include "metrics.h"
 
 static volatile sig_atomic_t stop = 0;
 static void sigint_handler(int sig) { (void)sig; stop = 1; }
@@ -49,6 +50,9 @@ int main(int argc, char **argv) {
         close(server_fd);
         return 1;
     }
+
+    /* start metrics/logging thread */
+    metrics_init();
 
     /* determine scheduler choice: CLI (--scheduler=...) overrides env SCHEDULER.
        Supported values: "fifo" or "sjf". Default: "sjf" (to preserve current behavior). */
@@ -124,12 +128,16 @@ int main(int argc, char **argv) {
         printf("submit: fd=%d est=%ld\n", client_fd, est);
         fflush(stdout);
 
+        /* metrics: record submit and whether est==0 */
+        metrics_inc_submit(est);
+
         if (threadpool_submit_job(tp, j) != 0) {
             close(client_fd);
         }
     }
 
     threadpool_destroy(tp);
+    metrics_shutdown();
     close(server_fd);
     return 0;
 }

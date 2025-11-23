@@ -1,6 +1,7 @@
 #include "threadpool.h"
 #include "http.h"
 #include "scheduler.h"
+#include "metrics.h"
 
 #include <pthread.h>
 #include <stdio.h>
@@ -40,8 +41,10 @@ static void *worker_main(void *arg) {
             /* try pop if available */
             job_t job;
             if (tp->sched && tp->sched->pop(tp->sched, &job) == 0) {
-                /* we got work */
-                /* signal producers that space is available */
+                /* record that a job was popped for metrics */
+                metrics_inc_pop(job.est_cost);
+                 /* we got work */
+                 /* signal producers that space is available */
                 pthread_cond_signal(&tp->not_full);
                 pthread_mutex_unlock(&tp->lock);
 
