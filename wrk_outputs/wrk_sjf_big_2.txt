@@ -1,0 +1,14 @@
+Running 30s test @ http://localhost:8080/big.bin
+  4 threads and 200 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    58.54ms  227.25ms   1.99s    95.76%
+    Req/Sec   228.25    172.81   636.00     64.03%
+  Latency Distribution
+     50%   14.09ms
+     75%   15.17ms
+     90%   17.62ms
+     99%    1.40s 
+  16531 requests in 30.03s, 16.15GB read
+  Socket errors: connect 0, read 2064, write 0, timeout 1847
+Requests/sec:    550.45
+Transfer/sec:    550.60MB

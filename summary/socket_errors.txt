@@ -1,0 +1,19 @@
+wrk_fifo_big_1.txt,  Socket errors: connect 0, read 2086, write 0, timeout 1875
+wrk_fifo_big_2.txt,  Socket errors: connect 0, read 2064, write 0, timeout 1840
+wrk_fifo_big_3.txt,  Socket errors: connect 0, read 1712, write 0, timeout 1488
+wrk_fifo_mixed_1.txt,  Socket errors: connect 0, read 1337, write 0, timeout 1249
+wrk_fifo_mixed_2.txt,  Socket errors: connect 0, read 1325, write 0, timeout 1233
+wrk_fifo_mixed_3.txt,  Socket errors: connect 0, read 1340, write 0, timeout 1250
+wrk_fifo_small_1.txt,  Socket errors: connect 0, read 750, write 0, timeout 702
+wrk_fifo_small_2.txt,  Socket errors: connect 0, read 753, write 0, timeout 705
+wrk_fifo_small_3.txt,  Socket errors: connect 0, read 755, write 0, timeout 707
+wrk_sjf_big_1.txt,  Socket errors: connect 0, read 1592, write 0, timeout 1490
+wrk_sjf_big_2.txt,  Socket errors: connect 0, read 2064, write 0, timeout 1847
+wrk_sjf_big_3.txt,  Socket errors: connect 0, read 2109, write 0, timeout 1884
+wrk_sjf_mixed_1.txt,  Socket errors: connect 0, read 1326, write 0, timeout 543
+wrk_sjf_mixed_2.txt,  Socket errors: connect 0, read 1332, write 0, timeout 581
+wrk_sjf_mixed_3.txt,  Socket errors: connect 0, read 1340, write 0, timeout 548
+wrk_sjf_small_1.txt,  Socket errors: connect 0, read 707, write 0, timeout 663
+wrk_sjf_small_2.txt,  Socket errors: connect 0, read 759, write 0, timeout 711
+wrk_sjf_small_3.txt,  Socket errors: connect 0, read 752, write 0, timeout 704
+

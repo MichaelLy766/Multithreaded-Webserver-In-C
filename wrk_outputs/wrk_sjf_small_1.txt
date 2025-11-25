@@ -1,0 +1,14 @@
+Running 30s test @ http://localhost:8080/small.txt
+  4 threads and 200 connections
+  Thread Stats   Avg      Stdev     Max   +/- Stdev
+    Latency    56.86ms  111.50ms   2.00s    99.12%
+    Req/Sec    73.36     51.19   262.00     73.57%
+  Latency Distribution
+     50%   50.04ms
+     75%   59.72ms
+     90%   60.11ms
+     99%  120.32ms
+  5680 requests in 30.06s, 527.45KB read
+  Socket errors: connect 0, read 707, write 0, timeout 663
+Requests/sec:    188.93
+Transfer/sec:     17.54KB
